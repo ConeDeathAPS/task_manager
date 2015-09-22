@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+	<script type="text/javascript">
+	var myApp = angular.module('myApp', []);
+
+	myApp.factory('taskFactory', function() {
+			var errors = [];
+			var tasks = [
+
+						];
+			var factory = {};
+			//methods here
+			factory.getTasks = function(showTasks) {
+				console.log("Retrieving tasks");
+				showTasks(tasks);
+			}
+			factory.getErrors = function() {
+				return errors;
+			}
+			var formatTask = function(newTask) {
+					var date = new Date();
+					date = date.toDateString();
+					newTask.created_at = date;
+					tasks.push(newTask);
+					console.log("New task added");
+					return true;				
+			}
+			factory.createTask = function (newTask) {
+
+				if (tasks.length > 0) {
+					for (i = 0; i < tasks.length; i++) {
+						if (newTask.name === tasks[i].name && newTask.deadline === tasks[i].deadline) {
+							console.log("names: ", newTask.name, tasks[i].name);
+							console.log("deadlines: ", newTask.deadline, tasks[i].deadline);
+							console.log('New task is not unique');
+							errors.notUnique = "That task already exists for that deadline";
+							return false;
+						}
+					}
+					return formatTask(newTask);
+				} else {
+					return formatTask(newTask);
+				}
+			}
+			factory.destroyTask = function (task) {
+				console.log('Removing task');
+				tasks.splice(tasks.indexOf(task), 1);
+			}
+	
+			return factory;
+		});
+
+	myApp.controller('tasksController', function ($scope, taskFactory) {
+		$scope.tasks = [];
+		
+		taskFactory.getTasks(function (data) {
+			console.log(data);
+			$scope.tasks = data;
+		})
+
+		$scope.createTask = function () {
+			console.log('Calling factory to make a new task');
+			taskFactory.createTask($scope.newTask);
+			$scope.errors = taskFactory.getErrors();
+			$scope.newTask = {};
+
+		}
+
+		$scope.removeTask = function (task) {
+			console.log('Calling factory to destroy task');
+			taskFactory.destroyTask(task);
+		}
+	})
+	</script>
+	<style type="text/css">
+	* {
+		padding: 0;
+		margin: 0;
+	}
+	body {
+		padding: 15px;
+	}
+	div {
+		width: 60%;
+		margin: 0 auto;
+	}
+	h2 {
+		margin: 15px;
+		text-align: center;
+	}
+	table {
+		border-collapse: collapse;
+		width: 70%;
+		text-align: center;
+		margin: 0 auto;
+	}
+	thead {
+		background-color: black;
+		color: white;
+		font-size: 1.4em;
+		font-weight: bold;
+		border-bottom: 3px solid grey;
+	}
+	td {
+		padding: 5px 10px;
+	}
+	tr:nth-child(even) {
+		background-color: lightgrey;
+	}
+	form {
+		margin: 10px auto;
+		width: 27%;
+		border: 2px solid black;
+		padding: 10px;
+	}
+	form label {
+		display: block;
+		margin: 10px;
+	}
+	form label input, select {
+		margin-left: 10px;
+	}
+	input[type=submit] {
+		padding: 5px 10px;
+		display: block;
+		margin: 10px auto;
+	}
+	</style>
+</head>
+<body>
+<div ng-controller="tasksController">
+	<h2><u>Tasks</u></h2>
+	<table>
+		<thead>	
+			<td>Tasks</td>
+			<td>Priority</td>
+			<td>Deadline</td>
+			<td>Created</td>
+			<td>Actions</td>
+		</thead>
+			<tr ng-repeat="task in tasks | orderBy: 'task.deadline'">
+				<td ng-bind="task.name"></td>
+				<td ng-bind="task.priority"></td>			
+				<td ng-bind="task.deadline"></td>			
+				<td ng-bind="task.created_at"></td>			
+				<td><button ng-click="removeTask(task)">Delete</button></td>					
+			</tr>
+	</table>
+	<h2><u>Add a new task</u></h2>
+	<form>
+		<label>Task Name: <input type="text" name="name" ng-model="newTask.name"></label>
+		<label>Priority:<select name="priority" ng-model="newTask.priority">
+			<option value="HIGH">HIGH</option>
+			<option value="MEDIUM">MEDIUM</option>
+			<option value="LOW">LOW</option>
+		</select></label>
+		<label>Deadline: <input type="date" name="date" ng-model="newTask.deadline"></label>
+		<input type="submit" value="Create" ng-click="createTask()">
+	</form>
+</div>
+</body>
+</html>
